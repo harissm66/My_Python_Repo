@@ -1,2 +1,1 @@
-echo "a2"
-echo $ls
+echo " Hi I am from file a2.sh"
