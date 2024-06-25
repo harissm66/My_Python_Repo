@@ -1,3 +1,69 @@
+code to rite the data to db 
+-----------------------------
+
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+
+# Configure the PostgreSQL database connection
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost/dbname'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize the SQLAlchemy extension
+db = SQLAlchemy(app)
+
+# Define the Task model
+class Task(db.Model):
+    __tablename__ = 'tasks'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    compute = db.Column(db.String(50), nullable=False)
+    src = db.Column(db.String(200), nullable=False)
+    cmd1 = db.Column(db.String(200), nullable=False)
+    cmd2 = db.Column(db.String(200), nullable=False)
+    output = db.Column(db.String(200), nullable=False)
+    report = db.Column(db.String(200), nullable=False)
+
+# Create the database tables
+with app.app_context():
+    db.create_all()
+
+@app.route('/task/create', methods=['POST'])
+def create_task():
+    # Extract the data from the request
+    name = request.json["name"]
+    compute = request.json["compute"]
+    src = request.json["src"]
+    cmd1 = request.json["cmd1"]
+    cmd2 = request.json["cmd2"]
+    output = request.json["output"]
+    report = request.json["report"]
+    
+    # Create a new Task instance
+    task = Task(
+        name=name,
+        compute=compute,
+        src=src,
+        cmd1=cmd1,
+        cmd2=cmd2,
+        output=output,
+        report=report
+    )
+    
+    # Add the Task instance to the session and commit it to the database
+    db.session.add(task)
+    db.session.commit()
+    
+    return jsonify({"message": "Task created successfully"}), 201
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+--------------------------------------
 from flask import Flask, request, jsonify
 import json
 import os
