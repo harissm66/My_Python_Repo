@@ -1,3 +1,13 @@
+{"name":"",
+"compute":"",
+"src":"github",
+"cmd1": 1,
+"cmd2": 2,
+"output":"",
+"report":"" 
+}
+
+
 code to rite the data to db 
 -----------------------------
 
