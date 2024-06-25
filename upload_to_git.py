@@ -1,3 +1,102 @@
+from flask import Flask, request, jsonify
+import json
+import os
+
+app = Flask(__name__)
+
+# Path to save the JSON file
+JSON_FILE_PATH = 'employees.json'
+
+def save_to_json(data, path):
+    try:
+        with open(path, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
+        print(f"Data successfully saved to {path}")
+    except Exception as e:
+        print(f"Error saving data to {path}: {e}")
+
+@app.route('/create_employee', methods=['POST'])
+def create_employee():
+    try:
+        employee_name = request.json.get('employee_name')
+        emp_id = request.json.get('emp_id')
+        salary = request.json.get('salary')
+        designation = request.json.get('designation')
+        joining_date = request.json.get('joining_date')
+
+        if not all([employee_name, emp_id, salary, designation, joining_date]):
+            return jsonify({'error': 'Missing data'}), 400
+
+        employee_data = {
+            'employee_name': employee_name,
+            'emp_id': emp_id,
+            'salary': salary,
+            'designation': designation,
+            'joining_date': joining_date
+        }
+
+        # Load existing data
+        if os.path.exists(JSON_FILE_PATH):
+            with open(JSON_FILE_PATH, 'r') as json_file:
+                employees = json.load(json_file)
+        else:
+            employees = []
+
+        employees.append(employee_data)
+        save_to_json(employees, JSON_FILE_PATH)
+
+        return jsonify({'message': 'Employee added successfully'}), 201
+    except Exception as e:
+        print(f"Error in /create_employee: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/task/create', methods=['POST'])
+def create_task():
+    name = request.json["name"]
+    compute = request.json["compute"]
+    src = request.json["src"]
+    cmd1 = request.json["cmd1"]
+    cmd2 = request.json["cmd2"]
+    output = request.json["output"]
+    report = request.json["report"]
+    data = {}
+    data['name'] = name
+    data['compute'] = compute
+    data['src'] = src
+    data['cmd1'] = cmd1
+    data[''] = cmd2
+    data[''] = output
+    data[''] = report
+    with open("Tasks/config.json", "w+") as outfile:
+        json.dump(data, outfile)
+    return "created"
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 upload all .sh files
 ------------------------
