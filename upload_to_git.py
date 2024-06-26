@@ -1,3 +1,103 @@
+
+{
+    "db_name": "your_db_name",
+    "db_user": "your_db_user",
+    "db_password": "your_db_password",
+    "db_host": "your_db_host",
+    "db_port": "your_db_port"
+}
+
+
+import json
+import psycopg2
+from flask import Flask, request
+
+app = Flask(__name__)
+
+# Function to read the database configuration from a file
+def get_db_config(config_file):
+    with open(config_file, 'r') as file:
+        config = json.load(file)
+    return config
+
+# Function to store task data in the database
+def store_task_in_db(db_config, data):
+    try:
+        # Connect to the PostgreSQL database
+        conn = psycopg2.connect(
+            dbname=db_config['db_name'],
+            user=db_config['db_user'],
+            password=db_config['db_password'],
+            host=db_config['db_host'],
+            port=db_config['db_port']
+        )
+        cursor = conn.cursor()
+
+        # Insert data into the task_details table
+        cursor.execute(
+            """
+            INSERT INTO task_details (name, compute, src, cmd1, cmd2, output, report)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (data['name'], data['compute'], data['src'], data['cmd1'], data['cmd2'], data['output'], data['report'])
+        )
+
+        # Commit the transaction
+        conn.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+
+        return "Task created successfully"
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+# Read database connection details from config file
+db_config = get_db_config('/path/to/config.json')
+
+@app.route('/task/create', methods=['POST'])
+def create_task():
+    # Parse JSON request data
+    request_data = request.get_json()
+    name = request_data.get("name")
+    compute = request_data.get("compute")
+    src = request_data.get("src")
+    cmd1 = request_data.get("cmd1")
+    cmd2 = request_data.get("cmd2")
+    output = request_data.get("output")
+    report = request_data.get("report")
+
+    # Create data dictionary
+    data = {
+        'name': name,
+        'compute': compute,
+        'src': src,
+        'cmd1': cmd1,
+        'cmd2': cmd2,
+        'output': output,
+        'report': report
+    }
+
+    # Store task in the database
+    result = store_task_in_db(db_config, data)
+
+    return result
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+-_------------------------------
+
+CREATE TABLE task_details (
+    id SERIAL PRIMARY KEY,
+    task_details JSONB
+);
+
+
+-------------------------------
+
 @app.route('/task/create', methods=['GET', 'POST'])
 def create_task():
     name = request.json["name"]
