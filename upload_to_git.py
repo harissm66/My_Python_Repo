@@ -1,4 +1,8 @@
+import json
+import subprocess
 
+# Define the JSON data
+json_data = '''
 {
   "id": "Daily Builds",
   "description": "Workflow that runs to build Apple A application",
@@ -51,6 +55,45 @@
       }
   ]
 }
+'''
+
+# Parse the JSON data
+workflow = json.loads(json_data)
+
+# Function to execute a list of commands
+def execute_commands(commands):
+    for cmd in commands:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        print(result.stdout)
+        if result.returncode != 0:
+            print(result.stderr)
+            return False
+    return True
+
+# Dictionary to store the status of each task
+task_status = {}
+
+# Execute tasks based on their dependencies
+for task in workflow["Tasks"]:
+    task_id = task["id"]
+    commands = task["data"]["cmd"]
+
+    if task_id == "1":
+        success = execute_commands(commands)
+        task_status[task_id] = "success" if success else "fail"
+    
+    elif task_id == "2":
+        if task_status["1"] == "success":
+            success = execute_commands(commands)
+            task_status[task_id] = "success" if success else "fail"
+    
+    elif task_id in ["3", "4"]:
+        if task_status["2"] in ["success", "fail"]:
+            success = execute_commands(commands)
+            task_status[task_id] = "success" if success else "fail"
+
+print("Task Execution Status:")
+print(task_status)
 
 
 --------------------------------------------------------------------
