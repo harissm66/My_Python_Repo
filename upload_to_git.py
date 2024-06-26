@@ -1,3 +1,25 @@
+@app.route('/task/create', methods=['GET', 'POST'])
+def create_task():
+    name = request.json["name"]
+    compute = request.json["compute"]
+    src = request.json["src"]
+    cmd1 = request.json["cmd1"]
+    cmd2 = request.json["cmd2"]
+    output = request.json["output"]
+    report = request.json["report"]
+    data = {}
+    data['name'] = name
+    data['compute'] = compute
+    data['src'] = src
+    data['cmd1'] = cmd1
+    data[''] = cmd2
+    data[''] = output
+    data[''] = report
+    with open("/home/nexgencld02/Hari/My_Python_Repo-main/config.json", "w+") as outfile:
+        json.dump(data, outfile)
+    return "created"
+
+
 {"name":"",
 "compute":"",
 "src":"github",
