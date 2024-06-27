@@ -1,4 +1,67 @@
+import base64
+import requests
 
+# GitHub repository and authentication details
+repo_owner = 'your-username'
+repo_name = 'your-repo'
+branch_name = 'main'
+access_token = 'your-access-token'
+
+# Function to create or update a file in the repository
+def create_or_update_file(file_path, content):
+    url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}'
+    headers = {
+        'Authorization': f'token {access_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    # Check if the file already exists
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        sha = response.json()['sha']
+    else:
+        sha = None
+
+    # Create or update the file
+    data = {
+        'message': f'Add or update {file_path}',
+        'content': base64.b64encode(content.encode()).decode(),
+        'branch': branch_name,
+    }
+    if sha:
+        data['sha'] = sha
+
+    response = requests.put(url, headers=headers, json=data)
+    if response.status_code in [200, 201]:
+        print(f'Successfully uploaded {file_path}')
+    else:
+        print(f'Failed to upload {file_path}')
+        print(response.json())
+
+# Function to upload shell scripts
+def gitupload(cmd):
+    if not isinstance(cmd, list) or len(cmd) != 2:
+        print("Invalid input. 'cmd' should be a list containing two shell script contents.")
+        return
+    
+    # Shell script contents from cmd list
+    script1_content = cmd[0]
+    script2_content = cmd[1]
+
+    # File paths in the repository
+    file1_path = 'script1.sh'
+    file2_path = 'script2.sh'
+
+    # Upload the shell scripts
+    create_or_update_file(file1_path, script1_content)
+    create_or_update_file(file2_path, script2_content)
+
+# Example usage
+cmd = ['echo "hi"', 'echo "hello"']
+gitupload(cmd)
+
+
+-------------------------------------------------
 from flask import Flask, request, jsonify
 import json
 import os
