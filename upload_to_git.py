@@ -1,3 +1,118 @@
+
+from flask import Flask, request, jsonify
+import json
+import os
+import psycopg2
+from github import Github
+from pathlib import Path
+import pdb
+
+app = Flask(__name__)
+
+#read the database configuration from a file
+def get_db_config(config_file):
+    with open(config_file, 'r') as file:
+        config = json.load(file)
+    return config
+
+db_config = get_db_config('Dbcred.json')
+
+def gitupload(cmd):
+    db_config = get_db_config('Dbcred.json')
+    access_token = db_config['access_token']
+    username = db_config['username']
+    repository_name =  db_config['repository_name']
+    #directory containing .sh files
+    commit_message = db_config['commit_message']
+    #pdb.set_trace()
+    g = Github(access_token)
+    # Get the repository
+    repo = g.get_user(username).get_repo(repository_name)
+    print("hello--->", cmd)
+    i=1
+    for content in cmd:
+        file_name='cmd'+str(i)+'.sh'
+        try:
+                with open(file_name, 'w+') as file:
+                   file.write(str(content))
+                   pdb.set_trace()
+                   contents = repo.get_contents(file_name)
+                print(contents)
+                # If the file exists, update it
+                repo.update_file(contents.path, commit_message, content, contents.sha)
+                #print(f'{file_name} updated successfully.')
+        except:
+                # If the file does not exist, create it
+                #repo.create_file(file_name, commit_message, content)
+                #print(f'{file_name} created successfully.')
+                print("hi")
+
+
+#  to store task data in the database
+def store_task_in_db(db_config, data):
+    
+    try:
+        # Connect to the PostgreSQL database
+        conn = psycopg2.connect(
+            dbname=db_config['db_name'],
+            user=db_config['db_user'],
+            password=db_config['db_password'],
+            host=db_config['db_host'],
+            port=db_config['db_port']
+        )
+        cursor = conn.cursor()
+
+        # Insert data into the task_details table
+        print(data)
+        val=('2', str(data))
+        cursor.execute("INSERT INTO tasks(TaskId, TaskDetails) VALUES (%s,%s)",val)
+            
+        conn.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+        cmd=(data['cmd1'], data['cmd2'])
+        gitupload(cmd)
+        return "Task created successfully"
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+# Read database connection details from config file
+
+
+
+@app.route('/task/create', methods=['GET', 'POST'])
+def create_task():
+    name = request.json["name"]
+    compute = request.json["compute"]
+    src = request.json["src"]
+    cmd1 = request.json["cmd1"]
+    cmd2 = request.json["cmd2"]
+    output = request.json["output"]
+    report = request.json["report"]
+    data = {}
+    data['name'] = name
+    data['compute'] = compute
+    data['src'] = src
+    data['cmd1'] = cmd1
+    data['cmd2'] = cmd2
+    data['output'] = output
+    data['report'] = report
+    with open("/home/nexgencld02/Hari/My_Python_Repo-main/config.json", "w+") as outfile:
+        json.dump(data, outfile)
+    result = store_task_in_db(db_config, data)
+    return result
+
+# Store task in the database
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+   
+
+
+------------------------------------------------
 import os
 import git
 import configparser
