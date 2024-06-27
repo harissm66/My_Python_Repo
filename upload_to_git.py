@@ -1,3 +1,50 @@
+import os
+import git
+import configparser
+
+def load_config(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    return config
+
+def commit_files_to_github(files, commit_message, config_file='config.ini'):
+    try:
+        # Load configuration
+        config = load_config(config_file)
+        repo_path = config.get('Git', 'repo_path')
+        branch = config.get('Git', 'branch')
+
+        # Open the existing repository
+        repo = git.Repo(repo_path)
+
+        # Add the files to the staging area
+        repo.index.add(files)
+
+        # Commit the changes
+        repo.index.commit(commit_message)
+
+        # Push the changes to the remote repository
+        origin = repo.remote(name='origin')
+        origin.push(refspec=f'{branch}:{branch}')
+        
+        print("Files committed and pushed successfully.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Example usage
+files = ['file1.txt', 'file2.txt']  # List of files to commit
+commit_message = 'Add new files'
+commit_files_to_github(files, commit_message)
+
+_---------------------
+
+
+
+[Git]
+repo_path = /path/to/your/repo
+branch = main
+
+-------++++++++++++
 import json
 import subprocess
 
