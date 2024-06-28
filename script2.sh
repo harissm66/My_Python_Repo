@@ -1,1 +1,1 @@
-
+echo 'cmd2 script'
