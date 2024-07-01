@@ -1,4 +1,43 @@
+query="""INSERT INTO tasks (taskdetails) VALUES (%s){}""".format([json.dumps(task["data"])])
+         #insert_query = sql.SQL("""
+            #INSERT INTO tasks (taskdetails) VALUES (%s)
+        #""")
+        #cur.execute(insert_query, [json.dumps(task["data"])])
+        print(query)
+        execute_query(query)
 
+def execute_query(query): #store_task_in_db(query):
+    
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            port=DB_PORT
+        )
+        cur = conn.cursor()
+
+        # Insert task details into the tasks table
+        #insert_query = sql.SQL("""
+            #INSERT INTO tasks (taskdetails) VALUES (%s)
+        #""")
+        #cur.execute(insert_query, [json.dumps(task["data"])])
+        query=sql.SQL(query)
+        cur.execute(str(query))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error inserting task into database: {e}")
+
+
+INSERT INTO tasks (taskdetails) VALUES (%s)['{"name": "Performace", "source": "http://github.com/repo", "compute": "AWS", "cmd": ["echo \'test\'", "echo \'script 2\'"], "output": "http://github.com/repo1", "report": "email"}']
+Error inserting task into database: syntax error at or near "SQL"
+LINE 1: SQL('INSERT INTO tasks (taskdetails) VALUES (%s)[\'{"name": ...
+        ^
+
+------------------------------------------------------
 from flask import Flask, request, jsonify
 import requests
 import base64
