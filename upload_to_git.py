@@ -1,3 +1,96 @@
+from flask import Flask, request, jsonify
+import requests
+import base64
+import psycopg2
+from psycopg2 import sql
+
+app = Flask(__name__)
+
+# Database connection parameters
+DB_HOST = "your_db_host"
+DB_NAME = "your_db_name"
+DB_USER = "your_db_user"
+DB_PASSWORD = "your_db_password"
+
+def upload_scripts_to_github(json_data, github_token, github_repo, github_owner):
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    for task in json_data["Tasks"]:
+        task_id = task["id"]
+        cmds = task["data"]["cmd"]
+
+        # Store the task details in the database
+        store_task_in_db(task)
+
+        # Create a directory for the task on GitHub
+        for i, cmd in enumerate(cmds):
+            script_content = cmd
+            script_path = f"tasks/{task_id}/script_{i+1}.sh"
+
+            # Encode the script content to base64
+            encoded_content = base64.b64encode(script_content.encode()).decode()
+
+            # GitHub API URL for creating/updating a file
+            url = f"https://api.github.com/repos/{github_owner}/{github_repo}/contents/{script_path}"
+
+            # Data payload
+            data = {
+                "message": f"Add script_{i+1}.sh for task {task_id}",
+                "content": encoded_content
+            }
+
+            # Make the PUT request to create/update the file on GitHub
+            response = requests.put(url, headers=headers, json=data)
+
+            if response.status_code == 201:
+                print(f"Successfully created {script_path} on GitHub.")
+            elif response.status_code == 200:
+                print(f"Successfully updated {script_path} on GitHub.")
+            else:
+                print(f"Failed to create/update {script_path}. Response: {response.json()}")
+
+def store_task_in_db(task):
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        cur = conn.cursor()
+
+        # Insert task details into the tasks table
+        insert_query = sql.SQL("""
+            INSERT INTO tasks (taskdetails) VALUES (%s)
+        """)
+        cur.execute(insert_query, [json.dumps(task["data"])])
+
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error inserting task into database: {e}")
+
+@app.route('/upload_tasks', methods=['POST'])
+def upload_tasks():
+    json_data = request.json
+
+    # Replace with your GitHub details
+    github_token = "YOUR_GITHUB_TOKEN"
+    github_repo = "YOUR_REPO_NAME"
+    github_owner = "YOUR_GITHUB_USERNAME"
+
+    upload_scripts_to_github(json_data, github_token, github_repo, github_owner)
+
+    return jsonify({"status": "success"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+-------------------
 {
     "name":"xyz",
     "compute":"",
