@@ -1,0 +1,54 @@
+
+{
+  "id": "Daily Builds",
+  "description": "Workflow that runs to build Apple A application",
+  "owner": "A",
+  "Tasks":[
+      {
+        "id": "1",
+        "type": "input",
+        "data": { "name": "Nightly Build", "source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
+        "Position": { "x": 0, "y": 50 }        
+      },
+      {
+        "id": "2",
+        "type": "middle", 
+        "data": { "name": "Run Unit Test", "source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },       
+        "position": { "x": 300, "y": 50 }
+      },
+      {
+        "id": "3",
+        "type": "output",
+        "data": { "name": "CoRelation" ,"source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
+        "position": { "x": 650, "y": 25 }        
+      },
+      {
+        "id": "4",
+        "type": "output",
+        "data": { "name": "Performace" ,"source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
+        "position": { "x": 650, "y": 100 }
+        
+      }
+  ],
+  "Edges":[
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",  
+        "Pre-condition": ["success"]      
+      },
+      {
+        "id": "e2a-3",
+        "source": "2",
+        "target": "3",       
+        "Pre-condition": ["success","Fail"] 
+      },
+      {
+        "id": "e2b-4",
+        "source": "2",
+        "target": "4",
+        "Pre-condition": ["Fail"] 
+      }
+  ]
+}
+
