@@ -2,8 +2,10 @@
 workflow build
 --------------
 
-import requests
+from flask import Flask, request, jsonify
 from typing import List, Dict
+
+app = Flask(__name__)
 
 class Task:
     def __init__(self, task_data):
@@ -62,62 +64,18 @@ class Workflow:
         # Simulate pre-conditions; replace with actual logic
         return True  # For simplicity, always return True
 
-# Example JSON data (replace with your actual data or load from file)
-workflow_data = {
-  "id": "Daily Builds",
-  "description": "Workflow that runs to build Apple A application",
-  "owner": "A",
-  "Tasks":[
-      {
-        "id": "1",
-        "type": "input",
-        "data": { "name": "Nightly Build", "source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
-        "position": { "x": 0, "y": 50 }        
-      },
-      {
-        "id": "2",
-        "type": "middle", 
-        "data": { "name": "Run Unit Test", "source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },       
-        "position": { "x": 300, "y": 50 }
-      },
-      {
-        "id": "3",
-        "type": "output",
-        "data": { "name": "CoRelation" ,"source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
-        "position": { "x": 650, "y": 25 }        
-      },
-      {
-        "id": "4",
-        "type": "output",
-        "data": { "name": "Performace" ,"source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
-        "position": { "x": 650, "y": 100 }        
-      }
-  ],
-  "Edges":[
-      {
-        "id": "e1-2",
-        "source": "1",
-        "target": "2",  
-        "Pre-condition": ["success"]      
-      },
-      {
-        "id": "e2a-3",
-        "source": "2",
-        "target": "3",       
-        "Pre-condition": ["success","Fail"] 
-      },
-      {
-        "id": "e2b-4",
-        "source": "2",
-        "target": "4",
-        "Pre-condition": ["Fail"] 
-      }
-  ]
-}
+@app.route('/execute_workflow', methods=['POST'])
+def execute_workflow():
+    if request.method == 'POST':
+        json_data = request.get_json()
+        workflow = Workflow(json_data)
+        workflow.execute_workflow()
+        return jsonify({'message': 'Workflow executed successfully'}), 200
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
 
-# Create and execute the workflow
-workflow = Workflow(workflow_data)
-workflow.execute_workflow()
+if __name__ == '__main__':
+    app.run(debug=True)
 
 ---------------------------------------------------------------------------------
 query="""INSERT INTO tasks (taskdetails) VALUES (%s){}""".format([json.dumps(task["data"])])
