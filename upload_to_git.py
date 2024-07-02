@@ -1,3 +1,125 @@
+
+workflow build
+--------------
+
+import requests
+from typing import List, Dict
+
+class Task:
+    def __init__(self, task_data):
+        self.id = task_data["id"]
+        self.type = task_data["type"]
+        self.data = task_data["data"]
+        self.position = task_data.get("position", {"x": 0, "y": 0})
+
+    def execute(self):
+        # Simulate task execution; replace with actual logic
+        print(f"Executing task '{self.data['name']}' with command: {self.data['cmd']}")
+
+class Edge:
+    def __init__(self, edge_data):
+        self.id = edge_data["id"]
+        self.source = edge_data["source"]
+        self.target = edge_data["target"]
+        self.pre_condition = edge_data["Pre-condition"]
+
+class Workflow:
+    def __init__(self, workflow_data):
+        self.id = workflow_data["id"]
+        self.description = workflow_data["description"]
+        self.owner = workflow_data["owner"]
+        self.tasks = []
+        self.edges = []
+
+        # Create tasks
+        for task_data in workflow_data["Tasks"]:
+            task = Task(task_data)
+            self.tasks.append(task)
+
+        # Create edges
+        for edge_data in workflow_data["Edges"]:
+            edge = Edge(edge_data)
+            self.edges.append(edge)
+
+    def execute_workflow(self):
+        # Execute tasks according to workflow edges
+        for edge in self.edges:
+            source_task = self.find_task_by_id(edge.source)
+            target_task = self.find_task_by_id(edge.target)
+
+            # Check pre-conditions
+            if self.check_pre_conditions(source_task, edge.pre_condition):
+                source_task.execute()
+                target_task.execute()
+
+    def find_task_by_id(self, task_id):
+        for task in self.tasks:
+            if task.id == task_id:
+                return task
+        return None
+
+    def check_pre_conditions(self, task, pre_conditions):
+        # Simulate pre-conditions; replace with actual logic
+        return True  # For simplicity, always return True
+
+# Example JSON data (replace with your actual data or load from file)
+workflow_data = {
+  "id": "Daily Builds",
+  "description": "Workflow that runs to build Apple A application",
+  "owner": "A",
+  "Tasks":[
+      {
+        "id": "1",
+        "type": "input",
+        "data": { "name": "Nightly Build", "source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
+        "position": { "x": 0, "y": 50 }        
+      },
+      {
+        "id": "2",
+        "type": "middle", 
+        "data": { "name": "Run Unit Test", "source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },       
+        "position": { "x": 300, "y": 50 }
+      },
+      {
+        "id": "3",
+        "type": "output",
+        "data": { "name": "CoRelation" ,"source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
+        "position": { "x": 650, "y": 25 }        
+      },
+      {
+        "id": "4",
+        "type": "output",
+        "data": { "name": "Performace" ,"source":"http://github.com/repo", "compute":"AWS","cmd":["echo 'test'","echo 'script 2'"], "output":"http://github.com/repo1","report":"email" },
+        "position": { "x": 650, "y": 100 }        
+      }
+  ],
+  "Edges":[
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",  
+        "Pre-condition": ["success"]      
+      },
+      {
+        "id": "e2a-3",
+        "source": "2",
+        "target": "3",       
+        "Pre-condition": ["success","Fail"] 
+      },
+      {
+        "id": "e2b-4",
+        "source": "2",
+        "target": "4",
+        "Pre-condition": ["Fail"] 
+      }
+  ]
+}
+
+# Create and execute the workflow
+workflow = Workflow(workflow_data)
+workflow.execute_workflow()
+
+---------------------------------------------------------------------------------
 query="""INSERT INTO tasks (taskdetails) VALUES (%s){}""".format([json.dumps(task["data"])])
          #insert_query = sql.SQL("""
             #INSERT INTO tasks (taskdetails) VALUES (%s)
